@@ -26,10 +26,12 @@ import pl.itcraft.soma.api.dto.FileUploadResponseDto;
 import pl.itcraft.soma.api.endpoints.EndpointUtils;
 import pl.itcraft.soma.core.error.ErrorStatus;
 import pl.itcraft.soma.core.model.entities.ItemPhoto;
+import pl.itcraft.soma.core.model.entities.MessagePhoto;
 import pl.itcraft.soma.core.model.entities.PhotoFile;
 import pl.itcraft.soma.core.model.entities.User;
 import pl.itcraft.soma.core.model.enums.PhotoUploadType;
 import pl.itcraft.soma.core.service.ItemService;
+import pl.itcraft.soma.core.service.MessagesService;
 import pl.itcraft.soma.core.service.UserService;
 
 public class PhotoUploadServlet extends HttpServlet {
@@ -40,6 +42,8 @@ public class PhotoUploadServlet extends HttpServlet {
 	private final BlobInfoFactory blobInfoFactory = new BlobInfoFactory();
 	private final ImagesService imagesService = ImagesServiceFactory.getImagesService();
 	private final ItemService itemService = new ItemService();
+	private final MessagesService messagesService = new MessagesService();
+
 	private final static Logger logger = Logger.getLogger(PhotoUploadServlet.class.getName());
 
 	private final UserService userService = new UserService();
@@ -75,11 +79,17 @@ public class PhotoUploadServlet extends HttpServlet {
 
 			switch(type) {
 			case ITEM_PHOTO:
-				ItemPhoto itemPhoto = itemService.saveItemPhoto(user, photoFiles.get(0));
+				Integer height = UploadUtils.getIntParameter(request, "height");
+				Integer width = UploadUtils.getIntParameter(request, "width");
+				ItemPhoto itemPhoto = itemService.saveItemPhoto(user, photoFiles.get(0), height, width);
 				dto.setObjectId(itemPhoto.getId());
 				break;
 			case USER_PROFILE:
 				userService.updateProfilePhoto(user, photoFiles.get(0));
+				break;
+			case MESSAGE_PHOTO:
+				MessagePhoto messagePhoto = messagesService.saveMessagePhoto(user, photoFiles.get(0));
+				dto.setObjectId(messagePhoto.getId());
 				break;
 			default:
 				break;
